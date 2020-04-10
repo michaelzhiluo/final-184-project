@@ -24,7 +24,7 @@
 <body>
 
 <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2020</h1>
-<h1 align="middle">CS 184: Final Project: Neural Style Transfer for Smokes and Liquids</h1>
+<h1 align="middle">Final Project: Neural Style Transfer for Smokes and Liquids</h1>
 <h2 align="middle">Michael Luo, Vishal Satish, Vincent Wang</h2>
 
 
@@ -32,28 +32,26 @@
 
 <h2 align="middle">Summary</h2>
 
- <p>Mahayana </p>
+ <p>Our goal is to implement a variant of the paper “Transport-Based Neural Style Transfer for Smoke Simulations” by Kim et al. However, instead of smoke we will be simulating water, and instead of using the out-of-the-box Mantaflow fluid simulator, we will attempt to write a simple differentiable water simulator ourselves.</p>
 
 
 <h2 align="middle">Problem Description</h2>
 
-<ul>
-    <li>Walk through how you rasterize triangles in your own words.</li>
-</ul>
-
-<ul>
-    <li>Explain how your algorithm is no worse than one that checks each sample within the bounding box of the triangle.</li>
-</ul>
+ <p>Neural style transfer involves using a neural network to transfer a particular style onto a target image so that the target image looks as if it has been rendered in that style. A classic example is to take the artwork of a particular painter and render other images in that style. Although it is a cool gimmick, this in itself has no practical application. Where this comes into play, however, is when we want to render complicated substances such as fluids in a manner that is hard to physically force. For example, let’s say we want water that has a certain surface texture similar to another liquid or natural phenomenon. It would be hard to tune the parameters of our fluid simulator to achieve the goal surface texture. However, what if we could train a neural network to take a standard image of water rendered in the goal shape and then apply our desired texture on top of it? The difficult part is making the final image seem realistic and obey the physical properties of the underlying fluid. With a lot of the initial style transfer work, people were simply taking an image of a cat or dog and making it look like a picasso painting. There’s no underlying physics model that must be obeyed there. When you start to simulate fluids like smoke, your neural network must learn how to transfer the style without breaking the fluid itself. Our goal is to extend the paper to a different fluid such as water. Furthermore, in the spirit of the class, we want to try and write our own simple differentiable fluid simulator to train the style transfer network instead of using an out-of-the-box fluid simulator such as Mantaflow, which is used in the paper. We think a simpler simulator might in fact make the learning aspect of the problem easier as the underlying physics will be simpler. Although our end results might not look as nice, we think this will allow us to learn more. </p>
 
 <h2 align="middle">Goals and Deliverables</h2>
 
-<ul>
-    <li>Walk through your supersampling algorithm and data structures. </li>
-</ul>
+<p>We plan to divide our project into three parts. The first part is developing a fluid-based simulator that allows proper differentiation/optimization. The second part is to create/use a model for training. In the original paper, they used a standard CNN to transfer styles; however, we plan to use a stronger style-transfer model called the Pix2Pix (GAN). The last part involves evaluating and debugging our model, since GANs tend to be sensitive to hyperparameters. </p>
+<p>We expect, by the end of the project, to produce high fidelity images with similar style as the source image. This should semantically match the excellent smoke results that Style Transfer paper produced. Like most GANS, We measure the quality/performance of our system with the popular inception score.</p>
 
 <h2 align="middle">Schedule</h2>
 
+<p>For the first two weeks of the project (up until milestone), Vishal and Vincent will work on the differentiable fluid engine. Michael will work on implementing/replicating the code from the Smoke simulation paper. Ideally, this should be done by the deadline. If the fluid simulator is hard to get to work (by next week 4/17), we will find a differentiable fluid engine online. For after the milestone until the deadline, we will all be focusing on tuning the Pix2Pix model, making algorithmic tweaks to get the best results. </p>
+
 <h2 align="middle">Resources</h2>
+<p>Our primary literature resource will be the original paper "Transport-Based Neural Style Transfer for Smoke Simulations" (https://arxiv.org/pdf/1905.07442.pdf). To build the simulator, we will use the paper “Position Based Fluids” by Macklin et al.
+We plan to use a GPU-accelerated physics engine to build our water simulator, and we have access to GPU servers on which to both run the simulator and train the network.
+</p>
 
 </body>
 </html>
