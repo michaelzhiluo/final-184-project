@@ -15,6 +15,8 @@
     font-family: 'Source Sans Pro', sans-serif;
   }
 </style>
+
+
 <title>CS 184 Final Project: Style Transfer for Smokes and Liquids</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
@@ -29,6 +31,108 @@
 
 
 <div>
+
+<h2 align="middle">Milestone (4/28)</h2>
+
+<h2 align="middle">Progress</h2>
+
+<p>Video Link: https://drive.google.com/file/d/1zMVbCjdZ0hPDEhxWmBGaqTnrQq_G87j_/view</p>
+
+<p>Slides Link: https://docs.google.com/presentation/d/1N2jHhEPvks0e72_CdK6nYIE-LpC3BsT_jZAlFIOFUlw/edit?usp=sharing</p>
+
+<p>Our progress is better described in the video and slides linked above.</p>
+
+<p>In short, we have accomplished two objectives: </p>
+
+<p> 1) We have become familiar with the codebase for Neural style transfer for smokes and have modified some of their code to suit our purposes. Below are two examples of transferring the texture of different water fronts to smokes. </p>
+
+<div align="center">
+                <table style="width=100%">
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/source1.jpg" width="400px" />
+                            <figcaption align="middle">Good Source Image</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/waves.gif" width="400px" />
+                            <figcaption align="middle">Good Style Transfer</figcaption>
+                        </td>  
+                    </tr>
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/source2.jpg" width="400px" />
+                            <figcaption align="middle">Bad Source Image</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/waves_choppy.gif" width="400px" />
+                            <figcaption align="middle">Bad Style Transfer</figcaption>
+                        </td>  
+                    </tr>
+
+                </table>
+</div>
+
+<p>In addition, we present two cases, corresponding to good and bad style transfers. </p>
+
+<div align="center">
+                <table style="width=100%">
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/good.jpg" width="400px" />
+                            <figcaption align="middle">Good Source Image</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/good_texture.png" width="400px" />
+                            <figcaption align="middle">Good Style Transfer</figcaption>
+                        </td>  
+                    </tr>
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/bad.jpg" width="400px" />
+                            <figcaption align="middle">Bad Source Image</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/bad_texture.png" width="400px" />
+                            <figcaption align="middle">Bad Style Transfer</figcaption>
+                        </td>  
+                    </tr>
+
+                </table>
+</div>
+
+<p> 2) We have developed a basic GAN framework to build up to the complicated Pix2Pix architecture. So far, we have implemented Wasserstein GAN with Gradient Penalty (WGAN-GP) and BIGAN. We chose these two GANs are our initial implemntations since WGAN-GPs are robust to training while BIGANS, unlike standard GANS, can learn to encode images into a latent space (random noise the generator samples from). This will facilitate learning a latent encoded space for different styles. Our WGAN-GP works pretty well on the toy CIFAR-10 dataset and is able to reproduce these images from a 50 dimensional random noise vector. On the other hand, our BIGAN can not only generate images from noise, but also learn how to encode desired images into the latent space. </p>
+<div align="center">
+                <table style="width=100%">
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/wgan-gp.png" width="400px" />
+                            <figcaption align="middle">WGAN-GP on CIFAR-10</figcaption>
+                        </td> 
+                    </tr>
+
+                </table>
+</div>
+
+<div align="center">
+                <table style="width=100%">
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/bigan-gen.png" width="400px" />
+                            <figcaption align="middle">BIGAN Generator Outputs</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/bigan-recon.png" width="400px" />
+                            <figcaption align="middle">BIGAN Generator-Encoder Reconstructions</figcaption>
+                        </td>  
+                    </tr>
+                </table>
+</div>
+
+<p>
+All in all, we are making good progress. We dropped the making of our fluid simlulator due to time constraints and are working on developing the Pix2Pix. In the next two weeks until the final project deadline, we are planning to fully train the Pix2Pix and test on this on a known water simulator and also see if there are improved results for the smoke renderer.
+</p>
+
+<h2 align="middle">Project Proposal (4/9)</h2>
 
 <h2 align="middle">Summary</h2>
 
