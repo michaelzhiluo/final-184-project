@@ -258,7 +258,7 @@ We first explored the Wasserstein GAN with Gradient Penalty (WGAN-GP) [7] as a w
     <table style="width=100%">
         <tr>
             <td align="middle">
-                <img src="assets/wgan_kl.png" height="40px" />
+                <img src="assets/wgan_kl.png" height="60px" />
             </td>
         </tr>
     </table>
@@ -272,7 +272,7 @@ However, KL divergence is not necessarily the best distance metric. This paper p
     <table style="width=100%">
         <tr>
             <td align="middle">
-                <img src="assets/wgan_loss.png" height="40px" />
+                <img src="assets/wgan_loss.png" height="60px" />
             </td>
         </tr>
     </table>
@@ -301,10 +301,15 @@ We also explored the Bidirectional GAN (BiGAN) [8] as a way for GANs to encode i
 
 <div align="center">
     <table style="width=100%">
-        <caption align="middle">Our proof-of-concept BiGAN model trained on MNIST.</caption>
+        <caption align="middle">Our proof-of-concept BiGAN model trained on MNIST with generated samples (TOP) and reconstructions (BOTTOM).</caption>
         <tr>
             <td align="middle">
-                <img src="assets/bigan_mnist.png" height="250px" />
+                <img src="assets/bigan_mnist_generated.png" height="250px" />
+            </td>
+        </tr>
+        <tr>
+            <td align="middle">
+                <img src="assets/bigan_mnist_reconstructed.png" height="60px" />
             </td>
         </tr>
     </table>
