@@ -17,7 +17,7 @@
 </style>
 
 
-<title>CS 184 Final Project: Style Transfer for Smokes and Liquids</title>
+<title>CS 184 Final Project: Fast Neural Style Transfer for Fluids</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
 </head>
@@ -26,137 +26,407 @@
 <body>
 
 <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2020</h1>
-<h1 align="middle">Final Project: Neural Style Transfer for Smokes and Liquids</h1>
+<h1 align="middle">Final Project: Fast Neural Style Transfer for Fluids</h1>
 <h2 align="middle">Michael Luo, Vishal Satish, Vincent Wang</h2>
 
 
 <div>
 
-<h2 align="middle">Milestone (4/28)</h2>
+<h2 align="middle">Abstract</h2>
 
-<h2 align="middle">Progress</h2>
+<p>
+Recent advances in computing have allowed for the development of high fidelity fluid simulators such as MantaFlow [1] and FLIP Fluids [2]. However, although these simulators are capable of achieving realistic movement of fluids, they still lack the ability to easily artistically control them. We define “artistic control” of a fluid as the ability to achieve a desired target configuration (in a single rendered frame) or flow (over multiple frames) of the fluid. This is particularly important in the fields of animation and design for fluids such as water and even air. Furthermore, certain fluids can be harder to simulate and thus even harder to artistically control. The converse is true in that there are particular fluids that are intrinsically simple and thus easier to both simulate and artistically control. One promising avenue of research has been artistically controlling a simpler base fluid and then transferring the style of a more complex target fluid onto that base to mimic it. The drawback of this method is that the “style transfer” must adhere to some combination of the physical properties of both the base and target fluids. Initial work focused on developing complex physical models to achieve this transfer. With the recent advent of deep learning and neural networks with high representational power, recent work has shifted to learning deep learning models that can learn this transfer in the fluid domain, similar to the approach by Gatys et al. [3] for paintings. We first implement the approach outlined for smoke simulation style transfer by Kim et al. [4] and apply it to multiple wave textures to simulate ocean renderings. From this proof of concept, we extend the implementation to other simulated fluids by writing a few FLIP-based simulations in the MantaFlow library ranging from a simple wave to a complex ball-drop. The drawback of the approach used by Kim et al. is that it requires an online optimization phase that is slow and computationally expensive. We instead propose a single-shot approach operating solely in the image space (Kim et al.’s approach operates on the raw density and velocity fields) that uses a generative model trained on triplets of input textures, input density renderings, and stylized output density renderings produced by Kim’s approach that is ~1830x faster and can enable real-time fluid style transfer.
+</p>
 
-<p>Video Link: https://drive.google.com/file/d/1zMVbCjdZ0hPDEhxWmBGaqTnrQq_G87j_/view</p>
 
-<p>Slides Link: https://docs.google.com/presentation/d/1N2jHhEPvks0e72_CdK6nYIE-LpC3BsT_jZAlFIOFUlw/edit?usp=sharing</p>
+<h2 align="middle">Methodology</h2>
 
-<p>Our progress is better described in the video and slides linked above.</p>
+<h3 align="middle">Implementing and Extending Neural Style Transfer for Smoke</h3>
 
-<p>In short, we have accomplished two objectives: </p>
+<h4 align="middle">Implementation</h4>
 
-<p> 1) We have become familiar with the codebase for Neural style transfer for smokes and have modified some of their code to suit our purposes. Below are two examples of transferring the texture of different water fronts to smokes. </p>
-
-<div align="center">
-                <table style="width=100%">
-                    <tr>
-                      <td align="middle">
-                            <img src="imgs/source1.jpg" width="400px" />
-                            <figcaption align="middle">Good Source Image</figcaption>
-                        </td>
-                        <td align="middle">
-                            <img src="imgs/waves.gif" width="400px" />
-                            <figcaption align="middle">Good Style Transfer</figcaption>
-                        </td>  
-                    </tr>
-                    <tr>
-                      <td align="middle">
-                            <img src="imgs/source2.jpg" width="400px" />
-                            <figcaption align="middle">Bad Source Image</figcaption>
-                        </td>
-                        <td align="middle">
-                            <img src="imgs/waves_choppy.gif" width="400px" />
-                            <figcaption align="middle">Bad Style Transfer</figcaption>
-                        </td>  
-                    </tr>
-
-                </table>
-</div>
-
-<p>In addition, we present two cases, corresponding to good and bad style transfers. </p>
+<p>
+We first implement the approach used by Kim et al. for neural style transfer of smoke simulations. The MantaFlow fluid simulator is used to render discretized cross-sectional frames of a 3D smoke simulation as density and velocity vectors. These along with the desired target texture in JPG format are the inputs to the algorithm. The output is the corresponding density for the stylized frame. In their approach, Kim et al. use the pre-trained Inception-5h/V1 [5] network for feature extraction and optimize an online style transfer loss at inference time that utilizes the input velocity vectors as an extra constraint as opposed to earlier methods that operate solely on the static density of the input. This is their “transport-based” approach. However, their iterative optimization method is computationally intensive and takes several minutes to stylize a single frame. All experiments were performed on an Nvidia DGX-1 server with 8x Tesla V100 graphics cards and dual Intel Xeon E5-2698 v4 CPUs @ 2.20GHz. Optimization was performed on a single GPU. It was clear that this approach would not scale in real-time graphics applications.
+</p>
 
 <div align="center">
-                <table style="width=100%">
-                    <tr>
-                      <td align="middle">
-                            <img src="imgs/good.jpg" width="400px" />
-                            <figcaption align="middle">Good Source Image</figcaption>
-                        </td>
-                        <td align="middle">
-                            <img src="imgs/good_texture.png" width="400px" />
-                            <figcaption align="middle">Good Style Transfer</figcaption>
-                        </td>  
-                    </tr>
-                    <tr>
-                      <td align="middle">
-                            <img src="imgs/bad.jpg" width="400px" />
-                            <figcaption align="middle">Bad Source Image</figcaption>
-                        </td>
-                        <td align="middle">
-                            <img src="imgs/bad_texture.png" width="400px" />
-                            <figcaption align="middle">Bad Style Transfer</figcaption>
-                        </td>  
-                    </tr>
-
-                </table>
-</div>
-
-<p> 2) We have developed a basic GAN framework to build up to the complicated Pix2Pix architecture. So far, we have implemented Wasserstein GAN with Gradient Penalty (WGAN-GP) and BIGAN. We chose these two GANs are our initial implemntations since WGAN-GPs are robust to training while BIGANS, unlike standard GANS, can learn to encode images into a latent space (random noise the generator samples from). This will facilitate learning a latent encoded space for different styles. Our WGAN-GP works pretty well on the toy CIFAR-10 dataset and is able to reproduce these images from a 50 dimensional random noise vector. On the other hand, our BIGAN can not only generate images from noise, but also learn how to encode desired images into the latent space. </p>
-<div align="center">
-                <table style="width=100%">
-                    <tr>
-                      <td align="middle">
-                            <img src="imgs/wgan-gp.png" width="400px" />
-                            <figcaption align="middle">WGAN-GP on CIFAR-10</figcaption>
-                        </td> 
-                    </tr>
-
-                </table>
+    <table style="width=100%">
+        <caption align="middle">MantaFlow smoke simulation (LEFT) and select rendered density frames (RIGHT).</caption>
+        <tr>
+          <td align="middle">
+                <video controls="controls" height="250px" name="Video Name" src="assets/smoke_gun.mov"></video>
+            </td>
+            <td align="middle">
+                <img src="assets/smoke_gun_frames.png" height="250px" />
+            </td>
+        </tr>
+    </table>
 </div>
 
 <div align="center">
-                <table style="width=100%">
-                    <tr>
-                      <td align="middle">
-                            <img src="imgs/bigan-gen.png" width="400px" />
-                            <figcaption align="middle">BIGAN Generator Outputs</figcaption>
-                        </td>
-                        <td align="middle">
-                            <img src="imgs/bigan-recon.png" width="400px" />
-                            <figcaption align="middle">BIGAN Generator-Encoder Reconstructions</figcaption>
-                        </td>  
-                    </tr>
-                </table>
+    <table style="width=100%">
+        <caption align="middle">Style transfer of fire (default example).</caption>
+        <tr>
+          <td align="middle">
+                <img src="assets/fire.png" height="250px" />
+            </td>
+            <td align="middle">
+                <img src="assets/fire_stylized.png" height="250px" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<h4 align="middle">Extension to Waves</h4>
+
+<p>
+With a working implementation of Kim et al.’s approach, we decided to see if we could transfer the style of ocean waves onto the smoke simulation in both single and consecutive frame settings. The results are below. Although we see surprisingly good performance on certain inputs, we also see that there are cases where the implementation does not faithfully transfer the target texture. In one instance, the bottom-left to top-right gradient in the input texture is not reproduced across the stylized image, and we instead see multiple gradients, some even in the opposite direction. This could potentially be attributed to the nature of the smoke simulation itself, which tends to move outwards in all directions like a sparse gas instead of in a single focused direction like a liquid wave would.
+</p>
+
+<div align="center">
+    <table style="width=100%">
+        <caption align="middle">Style transfer of calm (TOP) and choppy (BOTTOM) waves over 20 simulation frames.</caption>
+        <tr>
+          <td align="middle">
+                <img src="assets/waves.jpg" height="250px" />
+            </td>
+            <td align="middle">
+                <img src="assets/waves.gif" height="250px" />
+            </td>
+        </tr>
+        <tr>
+          <td align="middle">
+                <img src="assets/waves_choppy.jpg" height="250px" />
+            </td>
+            <td align="middle">
+                <img src="assets/waves_choppy.gif" height="250px" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div align="center">
+    <table style="width=100%">
+        <caption align="middle">Example failure mode where input gradient is not faithfully stylized.</caption>
+        <tr>
+          <td align="middle">
+                <img src="assets/failure_original.png" height="250px" />
+            </td>
+            <td align="middle">
+                <img src="assets/failure_stylized.png" height="250px" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<h4 align="middle">Extension to Generic Fluids</h4>
+
+<p>
+In an attempt to better model fluids such as water, we extended Kim et al.’s approach to generic fluids by writing a few simulations in MantaFLOW using a FLIP-based simulator. The simulations range from a simple 2D cross-sectional wave to a 3D wave and ball dropping into a fluid. We then pass cross-sections of the simulations into the neural style transfer algorithm as before, but instead use pressure instead of density. To do so, we also attempted to modify the differentiable portion of the optimization process for pressure, which should have been fairly straightforward since it is proportional to density. To our dismay, the optimization diverged every time and resulted in large uniform density outputs. We tried debugging this for a bit, but could not trace down the bug and instead chose to move forward with our single-shot approach in the interest of time.
+</p>
+
+<div align="center">
+    <table style="width=100%">
+        <caption align="middle">2D cross-sectional wave.</caption>
+        <tr>
+          <td align="middle">
+            <video controls="controls" height="250px" name="Video Name" src="assets/flip01.mov"></video>
+          </td>
+        </tr>
+    </table>
+</div>
+
+<div align="center">
+    <table style="width=100%">
+        <caption align="middle">3D wave.</caption>
+        <tr>
+          <td align="middle">
+            <video controls="controls" height="250px" name="Video Name" src="assets/flip02_damn.mov"></video>
+          </td>
+        </tr>
+    </table>
+</div>
+
+
+<div align="center">
+    <table style="width=100%">
+        <caption align="middle">3D ball drop (LEFT) and select rendered density frames (RIGHT).</caption>
+        <tr>
+          <td align="middle">
+                <video controls="controls" height="250px" name="Video Name" src="assets/flip02_ball.mov"></video>
+            </td>
+            <td align="middle">
+                <img src="assets/ball_drop_frames.png" height="250px" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<h3 align="middle">Novel Single-shot Approach</h3>
+
+<p>
+In our earlier experiments, we found that the online iterative optimization used by Kim et al. is extremely computationally intensive and takes several minutes on a single frame even with high-performance computational resources. Furthermore, it operates in the density and velocity vector-space which contains richer information but is also computationally expensive to work in. Instead, we propose using a single-shot approach that operates solely in the image space consisting of a generative model that takes an input texture + density rendering pair and produces a stylized output density rendering. The training data for this approach can be generated from Kim et al.’s approach. Thus our dataset generation time is long, but our inference time is quick and consists of a single forward pass of the generative model.
+</p>
+
+<div align="center">
+    <table style="width=100%">
+        <caption align="middle">Example training datapoints of (texture, original image, stylized image) for the generative model.</caption>
+        <tr>
+            <td align="middle">
+                <img src="assets/training_texture_004.jpg" height="150px" />
+            </td>
+            <td align="middle">
+                <img src="assets/training_original_004.png" height="150px" />
+            </td>
+            <td align="middle">
+                <img src="assets/training_stylized_004.png" height="150px" />
+            </td>
+        </tr>
+
+        <tr>
+            <td align="middle">
+                <img src="assets/training_texture_016.jpg" height="150px" />
+            </td>
+            <td align="middle">
+                <img src="assets/training_original_016.png" height="150px" />
+            </td>
+            <td align="middle">
+                <img src="assets/training_stylized_016.png" height="150px" />
+            </td>
+        </tr>
+
+        <tr>
+            <td align="middle">
+                <img src="assets/training_texture_024.jpg" height="150px" />
+            </td>
+            <td align="middle">
+                <img src="assets/training_original_024.png" height="150px" />
+            </td>
+            <td align="middle">
+                <img src="assets/training_stylized_024.png" height="150px" />
+            </td>
+        </tr>
+
+        <tr>
+            <td align="middle">
+                <img src="assets/training_texture_132.jpg" height="150px" />
+            </td>
+            <td align="middle">
+                <img src="assets/training_original_132.png" height="150px" />
+            </td>
+            <td align="middle">
+                <img src="assets/training_stylized_132.png" height="150px" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h4 align="middle">Generative Model</h4>
+
+<p>
+We use a Generative Adversarial Network (GAN) [6], which is a generative latent variable model in which two neural networks, the generator and discriminator, play a zero-sum minimax game. The typical loss function for a GAN is as follows:
+</p>
+
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="assets/gan_loss.png" height="40px" />
+            </td>
+        </tr>
+    </table>
 </div>
 
 <p>
-All in all, we are making good progress. We dropped the making of our fluid simlulator due to time constraints and are working on developing the Pix2Pix. In the next two weeks until the final project deadline, we are planning to fully train the Pix2Pix and test on this on a known water simulator and also see if there are improved results for the smoke renderer.
+The generator maps a latent space to the image space, meaning that it tries to produce a fake image. The discriminator takes in an image, either from the real data or fake generated data, and attempts to classify the image as real or fake. The discriminator tries to maximize the binary cross-entropy loss while the generator adversarially tries to minimize the loss.
 </p>
 
-<h2 align="middle">Project Proposal (4/9)</h2>
+<p>
+Unfortunately, GANs are notoriously hard to train and suffer from mode collapse, discriminator saturation, and extreme hyperparameter sensitivity. Furthermore, unlike autoencoders, basic GANs are incapable of encoding style into a latent space.
+</p>
 
-<h2 align="middle">Summary</h2>
+<h4 align="middle">WGAN-GP</h4>
 
- <p>Our goal is to implement a variant of the paper “Transport-Based Neural Style Transfer for Smoke Simulations” by Kim et al. However, instead of smoke we will be simulating water, and instead of using the out-of-the-box Mantaflow fluid simulator, we will attempt to write a simple differentiable water simulator ourselves.</p>
+<p>
+We first explored the Wasserstein GAN with Gradient Penalty (WGAN-GP) [7] as a way to fix discriminator saturation and hyperparameter sensitivity. The loss function for the GAN indirectly optimizes the KL divergence between the generator and real data distribution versus the average of both distributions:
+</p>
+
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="assets/wgan_kl.png" height="40px" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+<p>
+However, KL divergence is not necessarily the best distance metric. This paper proposes to use the Wasserstein distance metric instead. After some math, the loss function is:
+</p>
+
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="assets/wgan_loss.png" height="40px" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+<p>
+The discriminator, instead of predicting the log probability, predicts a value. This is equivalent to the “value” function in a reinforcement learning setting and hence the first term is called the "critic objective". The second term enforces that the discriminator is at least 1-lipschitz to ensure easier and more stable optimization of the Wasserstein objective. We have a working version of WGAN-GP and have successfully trained it on CIFAR-10.
+</p>
+
+<div align="center">
+    <table style="width=100%">
+        <caption align="middle">Our proof-of-concept WGAN-GP model trained on CIFAR-10.</caption>
+        <tr>
+            <td align="middle">
+                <img src="assets/wgan_cifar10.png" height="250px" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h4 align="middle">BiGAN</h4>
+
+<p>
+We also explored the Bidirectional GAN (BiGAN) [8] as a way for GANs to encode images into a latent space, similar to other latent-variable models. BiGAN adds in another neural network, in particular, the encoder. The loss function is identical to standard GANS, except that the discriminator takes in both the image and random noise, which either comes from the generator input (fake image) or the output of an encoder (real image). We have a working version of BiGAN and have successfully trained it on a toy MNIST example.
+</p>
+
+<div align="center">
+    <table style="width=100%">
+        <caption align="middle">Our proof-of-concept BiGAN model trained on MNIST.</caption>
+        <tr>
+            <td align="middle">
+                <img src="assets/bigan_mnist.png" height="250px" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+<p>
+We later realized that style does not necessarily have to be encoded into a latent space and explored an alternative that conditions on style. However, BiGAN can still be an effective tool for style transfer.
+</p>
+
+<h4 align="middle">Pix2Pix with Wasserstein Objective</h4>
+
+<p>
+Pix2Pix [9] is a minor modification of a standard GAN. A Pix2Pix is a type of condition GAN, which means that the discriminator conditions on contextual information to determine if an image is real or fake. In our case, the discriminator conditions on the original texture and sees if the generated image of the smoke follows the texture provided. We follow the Wasserstein variant of the Pix2Pix loss function (meaning that discriminator outputs values, not probabilities, and the Gradient Penalty is used).
+</p>
+
+<p>
+We ended up using this as our final generative model for style transfer as it performed best in initial experiments on a small dataset.
+</p>
+
+<div align="center">
+    <table style="width=100%">
+        <caption align="middle">Style transfer of various textures using our final fast Pix2Pix generative model.</caption>
+        <tr>
+          <td align="middle">
+                <img src="assets/pix2pix_tex1.png" height="250px" />
+            </td>
+            <td align="middle">
+                <img src="assets/pix2pix_style1.png" height="250px" />
+            </td>
+        </tr>
+        <tr>
+          <td align="middle">
+                <img src="assets/pix2pix_tex2.png" height="250px" />
+            </td>
+            <td align="middle">
+                <img src="assets/pix2pix_style2.png" height="250px" />
+            </td>
+        </tr>
+        <tr>
+          <td align="middle">
+                <img src="assets/pix2pix_tex3.png" height="250px" />
+            </td>
+            <td align="middle">
+                <img src="assets/pix2pix_style3.png" height="250px" />
+            </td>
+        </tr>
+        <tr>
+          <td align="middle">
+                <img src="assets/pix2pix_tex4.png" height="250px" />
+            </td>
+            <td align="middle">
+                <img src="assets/pix2pix_style4.png" height="250px" />
+            </td>
+        </tr>
+    </table>
+</div>
 
 
-<h2 align="middle">Problem Description</h2>
+<h2 align="middle">Results</h2>
 
- <p>Neural style transfer involves using a neural network to transfer a particular style onto a target image so that the target image looks as if it has been rendered in that style. A classic example is to take the artwork of a particular painter and render other images in that style. Although it is a cool gimmick, this in itself has no practical application. Where this comes into play, however, is when we want to render complicated substances such as fluids in a manner that is hard to physically force. For example, let’s say we want water that has a certain surface texture similar to another liquid or natural phenomenon. It would be hard to tune the parameters of our fluid simulator to achieve the goal surface texture. However, what if we could train a neural network to take a standard image of water rendered in the goal shape and then apply our desired texture on top of it? The difficult part is making the final image seem realistic and obey the physical properties of the underlying fluid. With a lot of the initial style transfer work, people were simply taking an image of a cat or dog and making it look like a picasso painting. There’s no underlying physics model that must be obeyed there. When you start to simulate fluids like smoke, your neural network must learn how to transfer the style without breaking the fluid itself. Our goal is to extend the paper to a different fluid such as water. Furthermore, in the spirit of the class, we want to try and write our own simple differentiable fluid simulator to train the style transfer network instead of using an out-of-the-box fluid simulator such as Mantaflow, which is used in the paper. We think a simpler simulator might in fact make the learning aspect of the problem easier as the underlying physics will be simpler. Although our end results might not look as nice, we think this will allow us to learn more. </p>
+<p>
+Although our single-shot Pix2Pix generative model takes approximately 8 hours to train on two Tesla V100 GPUs, a single forward pass on one GPU is on the order of 140ms. Compared to a single optimization pass of Kim et al.’s implementation which takes on average 4.27 minutes, this is a speedup of ~1830x.
+</p>
 
-<h2 align="middle">Goals and Deliverables</h2>
 
-<p>We plan to divide our project into three parts. The first part is developing a fluid-based simulator that allows proper differentiation/optimization. The second part is to create/use a model for training. In the original paper, they used a standard CNN to transfer styles; however, we plan to use a stronger style-transfer model called the Pix2Pix (GAN). The last part involves evaluating and debugging our model, since GANs tend to be sensitive to hyperparameters. </p>
-<p>We expect, by the end of the project, to produce high fidelity images with similar style as the source image. This should semantically match the excellent smoke results that Style Transfer paper produced. Like most GANS, We measure the quality/performance of our system with the popular inception score.</p>
+<h2 align="middle">Future Work</h2>
 
-<h2 align="middle">Schedule</h2>
+<p>
+In future work, we would like to fix the bug in our pressure implementation of Kim et al.’s approach and see how it performs on our custom fluid simulations. We can then train our single-shot generative model on this data. We would also like to experiment with providing the model with multiple frames at once for style transfer of consecutive simulation frames. Both Kim et al.’s approach and ours stylize multiple consecutive frames independently. The rationale behind stylizing them all at once is that there is richer cross-frame contextual data that can be used, potentially with an attention-based model.
+</p>
 
-<p>For the first two weeks of the project (up until milestone), Vishal and Vincent will work on the differentiable fluid engine. Michael will work on implementing/replicating the code from the Smoke simulation paper. Ideally, this should be done by the deadline. If the fluid simulator is hard to get to work (by next week 4/17), we will find a differentiable fluid engine online. For after the milestone until the deadline, we will all be focusing on tuning the Pix2Pix model, making algorithmic tweaks to get the best results. </p>
 
-<h2 align="middle">Resources</h2>
-<p>Our primary literature resource will be the original paper "Transport-Based Neural Style Transfer for Smoke Simulations" (https://arxiv.org/pdf/1905.07442.pdf). To build the simulator, we will use the paper “Position Based Fluids” by Macklin et al.
-We plan to use a GPU-accelerated physics engine to build our water simulator, and we have access to GPU servers on which to both run the simulator and train the network.
+<h2 align="middle">References</h2>
+
+<p>
+[1] http://mantaflow.com/
+
+<p>
+[2] https://flipfluids.com/
+</p>
+
+<p>
+[3] Gatys, Leon A., Alexander S. Ecker, and Matthias Bethge. "A neural algorithm of artistic style." arXiv preprint arXiv:1508.06576 (2015).
+</p>
+
+<p>
+[4] Kim, Byungsoo, et al. "Transport-based neural style transfer for smoke simulations." arXiv preprint arXiv:1905.07442 (2019).
+</p>
+
+<p>
+[5] Szegedy, Christian, et al. "Going deeper with convolutions." Proceedings of the IEEE conference on computer vision and pattern recognition. 2015.
+</p>
+
+<p>
+[6] Goodfellow, Ian, et al. "Generative adversarial nets." Advances in neural information processing systems. 2014.
+</p>
+
+<p>
+[7] Gulrajani, Ishaan, et al. "Improved training of wasserstein gans." Advances in neural information processing systems. 2017.
+</p>
+
+<p>
+[8] Donahue, Jeff, Philipp Krähenbühl, and Trevor Darrell. "Adversarial feature learning." arXiv preprint arXiv:1605.09782 (2016).
+</p>
+
+<p>
+[9] Isola, Phillip, et al. "Image-to-image translation with conditional adversarial networks." Proceedings of the IEEE conference on computer vision and pattern recognition. 2017.
+</p>
+
+<h2 align="middle">Contributions</h2>
+
+<p>
+Michael Luo - Helped write the generative model and report.
+</p>
+
+<p>
+Vishal Satish - Helped with the initial implementation of Kim et al.’s work, the fluid extensions in MantaFlow, and the report.
+</p>
+
+<p>
+Vincent Wang - Helped with collecting training textures, generating training data, and the report.
 </p>
 
 </body>
 </html>
-

@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+
+
+<title>CS 184 Final Project: Style Transfer for Smokes and Liquids</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2020</h1>
+<h1 align="middle">Final Project: Neural Style Transfer for Smokes and Liquids</h1>
+<h2 align="middle">Michael Luo, Vishal Satish, Vincent Wang</h2>
+
+
+<div>
+
+<h2 align="middle">Milestone (4/28)</h2>
+
+<h2 align="middle">Progress</h2>
+
+<p>Video Link: https://drive.google.com/file/d/1zMVbCjdZ0hPDEhxWmBGaqTnrQq_G87j_/view</p>
+
+<p>Slides Link: https://docs.google.com/presentation/d/1N2jHhEPvks0e72_CdK6nYIE-LpC3BsT_jZAlFIOFUlw/edit?usp=sharing</p>
+
+<p>Our progress is better described in the video and slides linked above.</p>
+
+<p>In short, we have accomplished two objectives: </p>
+
+<p> 1) We have become familiar with the codebase for Neural style transfer for smokes and have modified some of their code to suit our purposes. Below are two examples of transferring the texture of different water fronts to smokes. </p>
+
+<div align="center">
+                <table style="width=100%">
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/source1.jpg" width="400px" />
+                            <figcaption align="middle">Good Source Image</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/waves.gif" width="400px" />
+                            <figcaption align="middle">Good Style Transfer</figcaption>
+                        </td>  
+                    </tr>
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/source2.jpg" width="400px" />
+                            <figcaption align="middle">Bad Source Image</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/waves_choppy.gif" width="400px" />
+                            <figcaption align="middle">Bad Style Transfer</figcaption>
+                        </td>  
+                    </tr>
+
+                </table>
+</div>
+
+<p>In addition, we present two cases, corresponding to good and bad style transfers. </p>
+
+<div align="center">
+                <table style="width=100%">
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/good.jpg" width="400px" />
+                            <figcaption align="middle">Good Source Image</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/good_texture.png" width="400px" />
+                            <figcaption align="middle">Good Style Transfer</figcaption>
+                        </td>  
+                    </tr>
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/bad.jpg" width="400px" />
+                            <figcaption align="middle">Bad Source Image</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/bad_texture.png" width="400px" />
+                            <figcaption align="middle">Bad Style Transfer</figcaption>
+                        </td>  
+                    </tr>
+
+                </table>
+</div>
+
+<p> 2) We have developed a basic GAN framework to build up to the complicated Pix2Pix architecture. So far, we have implemented Wasserstein GAN with Gradient Penalty (WGAN-GP) and BIGAN. We chose these two GANs are our initial implemntations since WGAN-GPs are robust to training while BIGANS, unlike standard GANS, can learn to encode images into a latent space (random noise the generator samples from). This will facilitate learning a latent encoded space for different styles. Our WGAN-GP works pretty well on the toy CIFAR-10 dataset and is able to reproduce these images from a 50 dimensional random noise vector. On the other hand, our BIGAN can not only generate images from noise, but also learn how to encode desired images into the latent space. </p>
+<div align="center">
+                <table style="width=100%">
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/wgan-gp.png" width="400px" />
+                            <figcaption align="middle">WGAN-GP on CIFAR-10</figcaption>
+                        </td> 
+                    </tr>
+
+                </table>
+</div>
+
+<div align="center">
+                <table style="width=100%">
+                    <tr>
+                      <td align="middle">
+                            <img src="imgs/bigan-gen.png" width="400px" />
+                            <figcaption align="middle">BIGAN Generator Outputs</figcaption>
+                        </td>
+                        <td align="middle">
+                            <img src="imgs/bigan-recon.png" width="400px" />
+                            <figcaption align="middle">BIGAN Generator-Encoder Reconstructions</figcaption>
+                        </td>  
+                    </tr>
+                </table>
+</div>
+
+<p>
+All in all, we are making good progress. We dropped the making of our fluid simlulator due to time constraints and are working on developing the Pix2Pix. In the next two weeks until the final project deadline, we are planning to fully train the Pix2Pix and test on this on a known water simulator and also see if there are improved results for the smoke renderer.
+</p>
+
+<h2 align="middle">Project Proposal (4/9)</h2>
+
+<h2 align="middle">Summary</h2>
+
+ <p>Our goal is to implement a variant of the paper “Transport-Based Neural Style Transfer for Smoke Simulations” by Kim et al. However, instead of smoke we will be simulating water, and instead of using the out-of-the-box Mantaflow fluid simulator, we will attempt to write a simple differentiable water simulator ourselves.</p>
+
+
+<h2 align="middle">Problem Description</h2>
+
+ <p>Neural style transfer involves using a neural network to transfer a particular style onto a target image so that the target image looks as if it has been rendered in that style. A classic example is to take the artwork of a particular painter and render other images in that style. Although it is a cool gimmick, this in itself has no practical application. Where this comes into play, however, is when we want to render complicated substances such as fluids in a manner that is hard to physically force. For example, let’s say we want water that has a certain surface texture similar to another liquid or natural phenomenon. It would be hard to tune the parameters of our fluid simulator to achieve the goal surface texture. However, what if we could train a neural network to take a standard image of water rendered in the goal shape and then apply our desired texture on top of it? The difficult part is making the final image seem realistic and obey the physical properties of the underlying fluid. With a lot of the initial style transfer work, people were simply taking an image of a cat or dog and making it look like a picasso painting. There’s no underlying physics model that must be obeyed there. When you start to simulate fluids like smoke, your neural network must learn how to transfer the style without breaking the fluid itself. Our goal is to extend the paper to a different fluid such as water. Furthermore, in the spirit of the class, we want to try and write our own simple differentiable fluid simulator to train the style transfer network instead of using an out-of-the-box fluid simulator such as Mantaflow, which is used in the paper. We think a simpler simulator might in fact make the learning aspect of the problem easier as the underlying physics will be simpler. Although our end results might not look as nice, we think this will allow us to learn more. </p>
+
+<h2 align="middle">Goals and Deliverables</h2>
+
+<p>We plan to divide our project into three parts. The first part is developing a fluid-based simulator that allows proper differentiation/optimization. The second part is to create/use a model for training. In the original paper, they used a standard CNN to transfer styles; however, we plan to use a stronger style-transfer model called the Pix2Pix (GAN). The last part involves evaluating and debugging our model, since GANs tend to be sensitive to hyperparameters. </p>
+<p>We expect, by the end of the project, to produce high fidelity images with similar style as the source image. This should semantically match the excellent smoke results that Style Transfer paper produced. Like most GANS, We measure the quality/performance of our system with the popular inception score.</p>
+
+<h2 align="middle">Schedule</h2>
+
+<p>For the first two weeks of the project (up until milestone), Vishal and Vincent will work on the differentiable fluid engine. Michael will work on implementing/replicating the code from the Smoke simulation paper. Ideally, this should be done by the deadline. If the fluid simulator is hard to get to work (by next week 4/17), we will find a differentiable fluid engine online. For after the milestone until the deadline, we will all be focusing on tuning the Pix2Pix model, making algorithmic tweaks to get the best results. </p>
+
+<h2 align="middle">Resources</h2>
+<p>Our primary literature resource will be the original paper "Transport-Based Neural Style Transfer for Smoke Simulations" (https://arxiv.org/pdf/1905.07442.pdf). To build the simulator, we will use the paper “Position Based Fluids” by Macklin et al.
+We plan to use a GPU-accelerated physics engine to build our water simulator, and we have access to GPU servers on which to both run the simulator and train the network.
+</p>
+
+</body>
+</html>
+
